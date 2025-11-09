@@ -1,20 +1,22 @@
 const express = require("express");
-const axios = require("axios"); // Para hacer la petición HTTPS
+const bodyParser = require("body-parser");
+
 const app = express();
+app.use(bodyParser.json());
 
-const RENDER_URL = "https://esp32-telegram-proxy.onrender.com/esp32"; // Tu Render original
+let lastMessage = null;
 
-// Endpoint que consulta el ESP32
-app.get("/esp32", async (req, res) => {
-  try {
-    // Hacemos GET a Render HTTPS
-    const response = await axios.get(RENDER_URL);
-    res.send(response.data); // Devolvemos el contenido al ESP32
-  } catch (error) {
-    console.error("Error consultando Render:", error.message);
-    res.status(500).send("Error al consultar Render");
-  }
+// Endpoint que recibe los mensajes de Telegram
+app.post("/telegram", (req, res) => {
+  lastMessage = req.body;
+  console.log("Mensaje recibido:", lastMessage);
+  res.sendStatus(200);
+});
+
+// Endpoint para que el ESP32 consulte el último mensaje
+app.get("/esp32", (req, res) => {
+  res.json(lastMessage || {});
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Proxy HTTP activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
