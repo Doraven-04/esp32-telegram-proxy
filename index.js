@@ -10,9 +10,9 @@ let messages = []; // Cola de mensajes pendientes
 
 // Endpoint para recibir mensajes de Telegram
 app.post("/telegram", (req, res) => {
-  const msg = req.body.text || "";
+  const msg = req.body.message && req.body.message.text ? req.body.message.text : "";
   if (msg) {
-    messages.push(msg); // Guardar mensaje en la cola
+    messages.push(msg);
     console.log("Mensaje recibido:", msg);
   }
   res.sendStatus(200);
@@ -21,8 +21,8 @@ app.post("/telegram", (req, res) => {
 // Endpoint HTTP para que ESP32 consulte mensajes
 app.get("/esp32", (req, res) => {
   if (messages.length === 0) return res.send("No hay mensajes");
-  const msg = messages.shift(); // Saca el primer mensaje de la cola
-  res.send(msg);                // Devuelve solo el texto
+  const msg = messages.shift();
+  res.send(msg);
 });
 
 const PORT = process.env.PORT || 3000;
