@@ -1,22 +1,29 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
-let lastMessage = null;
+let messages = []; // Cola de mensajes pendientes
 
-// Endpoint que recibe los mensajes de Telegram
+// Endpoint para recibir mensajes de Telegram
 app.post("/telegram", (req, res) => {
-  lastMessage = req.body;
-  console.log("Mensaje recibido:", lastMessage);
+  const msg = req.body.message && req.body.message.text ? req.body.message.text : "";
+  if (msg) {
+    messages.push(msg);
+    console.log("Mensaje recibido:", msg);
+  }
   res.sendStatus(200);
 });
 
-// Endpoint para que el ESP32 consulte el último mensaje
+// Endpoint HTTP para que ESP32 consulte mensajes
 app.get("/esp32", (req, res) => {
-  res.json(lastMessage || {});
+  if (messages.length === 0) return res.send("No hay mensajes");
+  const msg = messages.shift();
+  res.send(msg);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Proxy HTTP activo en puerto ${PORT}`));
